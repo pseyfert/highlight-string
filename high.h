@@ -69,7 +69,7 @@ size_t equalbeg(const char *one, const char *two) {
 size_t equalend(const char *one, const char *two) {
   size_t o = strlen(one);
   size_t t = strlen(two);
-  size_t shorter = MIN(o, t);
+  size_t shorter = MIN(o, t) - equalbeg(one, two);
 
   for (size_t i = 0; i < shorter; i++) {
     if (one[o - i - 1] != two[t - i - 1]) {
@@ -118,11 +118,30 @@ int high(char *inA, char *inB, char **outA, char **outB) {
   size_t oA = goodstart;
   size_t oB = goodstart;
 
+  size_t trailer = equalend(inA, inB);
+  char* cutoffA;
+  char* cutoffB;
+  if (trailer > 0) {
+    size_t trailerA = MIN(trailer, strlen(inA) - goodstart);
+    size_t trailerB = MIN(trailer, strlen(inB) - goodstart);
+    size_t len_frontA = strlen(inA) - trailerA;
+    size_t len_frontB = strlen(inB) - trailerB;
+    cutoffA = (char *)malloc(1+len_frontA);
+    cutoffB = (char *)malloc(1+len_frontB);
+    strncpy(cutoffA, inA, len_frontA);
+    strncpy(cutoffB, inB, len_frontB);
+    cutoffA[len_frontA] = 0;
+    cutoffB[len_frontB] = 0;
+  } else {
+    cutoffA = inA;
+    cutoffB = inB;
+  }
+
   int redA = 0;
   // int redB = 0; // redundant ATM
 
-  for (; iA < strlen(inA) && iB < strlen(inB);) {
-    if (inA[iA] == inB[iB]) {
+  for (; iA < strlen(cutoffA) && iB < strlen(cutoffB);) {
+    if (cutoffA[iA] == cutoffB[iB]) {
       if (redA) {
         for (size_t tmp = 0; tmp < strlen(off); ++tmp) {
           (*outA)[oA++] = off[tmp];
@@ -130,8 +149,8 @@ int high(char *inA, char *inB, char **outA, char **outB) {
         }
         redA = !redA;
       }
-      (*outA)[oA++] = inA[iA++];
-      (*outB)[oB++] = inB[iB++];
+      (*outA)[oA++] = cutoffA[iA++];
+      (*outB)[oB++] = cutoffB[iB++];
     } else {
       if (!redA) {
         for (size_t tmp = 0; tmp < strlen(on); ++tmp) {
@@ -140,28 +159,28 @@ int high(char *inA, char *inB, char **outA, char **outB) {
         }
         redA = !redA;
       }
-      if (inA[iA] != '%')
-        (*outA)[oA++] = inA[iA++];
+      if (cutoffA[iA] != '%')
+        (*outA)[oA++] = cutoffA[iA++];
       else {
-        (*outA)[oA++] = inA[iA++];
-        (*outA)[oA++] = inA[iA++];
+        (*outA)[oA++] = cutoffA[iA++];
+        (*outA)[oA++] = cutoffA[iA++];
       }
-      if (inB[iB] != '%')
-        (*outB)[oB++] = inB[iB++];
+      if (cutoffB[iB] != '%')
+        (*outB)[oB++] = cutoffB[iB++];
       else {
-        (*outB)[oB++] = inB[iB++];
-        (*outB)[oB++] = inB[iB++];
+        (*outB)[oB++] = cutoffB[iB++];
+        (*outB)[oB++] = cutoffB[iB++];
       }
     }
   }
-  if (iA < strlen(inA)) {
+  if (iA < strlen(cutoffA)) {
     if (!redA) {
       for (size_t tmp = 0; tmp < strlen(on); ++tmp) {
         (*outA)[oA++] = on[tmp];
       }
     }
-    for (; iA < strlen(inA);) {
-      (*outA)[oA++] = inA[iA++];
+    for (; iA < strlen(cutoffA);) {
+      (*outA)[oA++] = cutoffA[iA++];
     }
     for (size_t tmp = 0; tmp < strlen(off); ++tmp) {
       (*outA)[oA++] = off[tmp];
@@ -173,14 +192,14 @@ int high(char *inA, char *inB, char **outA, char **outB) {
       }
     }
   }
-  if (iB < strlen(inB)) {
+  if (iB < strlen(cutoffB)) {
     if (!redA) {
       for (size_t tmp = 0; tmp < strlen(on); ++tmp) {
         (*outB)[oB++] = on[tmp];
       }
     }
-    for (; iB < strlen(inB);) {
-      (*outB)[oB++] = inB[iB++];
+    for (; iB < strlen(cutoffB);) {
+      (*outB)[oB++] = cutoffB[iB++];
     }
     for (size_t tmp = 0; tmp < strlen(off); ++tmp) {
       (*outB)[oB++] = off[tmp];
@@ -193,10 +212,18 @@ int high(char *inA, char *inB, char **outA, char **outB) {
     }
   }
 
+  for (size_t tmp = strlen(cutoffA) ; tmp < strlen(inA); ++tmp) {
+    (*outA)[oA++] = inA[tmp];
+    (*outB)[oB++] = inA[tmp];
+  }
+
   (*outA)[oA] = '\0';
   (*outB)[oB] = '\0';
 
-
+  if (trailer > 0) {
+    free(cutoffA);
+    free(cutoffB);
+  }
   if (percentsA > 0)
     free(inA);
   if (percentsB > 0)

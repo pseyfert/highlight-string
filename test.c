@@ -70,5 +70,13 @@ int main() {
   free(s1);
   free(s2);
 
+  printf("\033[0m");
+
+  t1 = "helolotototot";
+  t2 = "hellolotototot";
+  high(t1, t2, &s1, &s2);
+  printf("\"%s\" and \"%s\" turned into \"%s\" and \"%s\"\n", t1, t2, s1, s2);
+  free(s1);
+  free(s2);
   return 0;
 }
