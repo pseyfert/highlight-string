@@ -29,8 +29,21 @@
 static const char *on = "\033[1m\033[31m";
 static const char *off = "\033[0m";
 
-int percents(char *c) {
-  int count = 0;
+// main function
+int high(char *inA, char *inB, char **outA, char **outB);
+// count the percent signs in a string
+size_t percents(char *c);
+// determine the maximum number of toggles between highlight and regular font face
+// purely based on their lengths
+size_t maxtoggle(const char *a, const char *b);
+// (see below)
+size_t equalend(const char *one, const char *two);
+size_t equalbeg(const char *one, const char *two);
+// allocate new string and escape all percent signs (for zsh prompts)
+char *escape(char *in, size_t p);
+
+size_t percents(char *c) {
+  size_t count = 0;
   for (size_t i = 0; i < strlen(c); ++i) {
     if (c[i] == '%')
       count++;
@@ -92,8 +105,8 @@ size_t maxtoggle(const char *a, const char *b) {
 }
 
 int high(char *inA, char *inB, char **outA, char **outB) {
-  int percentsA = percents(inA);
-  int percentsB = percents(inB);
+  size_t percentsA = percents(inA);
+  size_t percentsB = percents(inB);
 
   size_t expected_A_length = (1 + strlen(inA) + percentsA +
                          maxtoggle(inA, inB) * (strlen(on) + strlen(off)));
