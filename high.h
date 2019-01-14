@@ -49,7 +49,9 @@ char *escape(char *in, size_t p) {
     // if (ii - i == p)
     //   break;
   }
-  o[ii] = '\0';
+  for ( ; ii < 1 + strlen(in) + p ; ++ii) {
+    o[ii] = '\0';
+  }
   return o;
 }
 
